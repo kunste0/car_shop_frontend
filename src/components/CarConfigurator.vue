@@ -4,7 +4,7 @@
     <div class="q-pa-lg">
       <div v-for="(articles, type) in articlesGrouped" :key="type">
         <p>{{ $t('configurator.articleType' + type) }}</p>
-        <div v-if="type == 3">
+        <div v-if="constants.selectionCategories.includes(Number(type))">
           <q-select
             filled
             v-model="chosenArticles2"
