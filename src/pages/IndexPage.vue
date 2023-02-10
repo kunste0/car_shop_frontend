@@ -1,9 +1,6 @@
 <template>
   <q-page class="row items-center justify-evenly">
-    <car-configurator
-      :title="$t('configurator.title')"
-      active
-    ></car-configurator>
+    <car-configurator :title="$t('configurator.title')"></car-configurator>
   </q-page>
 </template>
 

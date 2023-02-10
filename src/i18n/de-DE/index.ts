@@ -4,5 +4,6 @@ export default {
   },
   configurator: {
     title: 'Konfigurator',
+    maxArticles: 'Maximal {max} Artikel',
   },
 };
