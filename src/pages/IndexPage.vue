@@ -1,5 +1,5 @@
 <template>
-  <q-page class="row items-center justify-evenly">
+  <q-page class="row items-center justify-evenly" padding>
     <car-configurator :title="$t('configurator.title')"></car-configurator>
   </q-page>
 </template>

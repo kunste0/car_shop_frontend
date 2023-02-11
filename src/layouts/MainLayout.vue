@@ -2,9 +2,8 @@
   <q-layout view="lHh Lpr lFf">
     <q-header elevated>
       <q-toolbar>
-
         <q-toolbar-title>
-          {{$t('main.title')}}
+          {{ $t('main.title') }}
         </q-toolbar-title>
       </q-toolbar>
     </q-header>

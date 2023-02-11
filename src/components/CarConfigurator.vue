@@ -1,12 +1,16 @@
 <template>
-  <div>
-    <p>{{ title }}</p>
-    <div class="q-pa-lg">
-      <div v-for="(articles, type) in articlesGrouped" :key="type">
-        <p>{{ $t('configurator.articleType' + type) }}</p>
+  <div class="configurator">
+    <p class="text-weight-bold">{{ title }}</p>
+    <div v-for="(articles, type) in articlesGrouped" :key="type">
+      <q-expansion-item
+        expand-separator
+        :label="$t('configurator.articleType' + type)"
+      >
         <div v-if="constants.selectionCategories.includes(Number(type))">
           <q-select
+            class="q-my-sm"
             filled
+            :popup-content-style="{ width: '320px' }"
             v-model="chosenArticles2"
             multiple
             :options="
@@ -24,7 +28,7 @@
                 max: constants.miscArticlesMax,
               })
             "
-            style="width: 250px"
+            style="max-width: 12rem"
           />
         </div>
         <div v-else>
@@ -42,27 +46,34 @@
             </q-item>
           </q-list>
         </div>
+      </q-expansion-item>
+    </div>
+    <div class="q-my-md">
+      <p class="text-positive text-weight-bold">
+        {{ `${$t('configurator.price')}: ${price} €` }}
+      </p>
+
+      <div class="row justify-center items-center">
+        <q-btn
+          color="primary"
+          :label="$t('configurator.submitOrderButton')"
+          @click="submitOrder"
+        />
       </div>
-      <p>{{ price }}</p>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import {
-  QItem,
-  QItemLabel,
-  QItemSection,
-  QList,
-  QRadio,
-  QSelect,
-} from 'quasar';
 import { defineComponent, ref } from 'vue';
 import { api } from '../boot/axios';
 import { Article } from './models';
-import _ from 'lodash-core';
+import sum from 'lodash/sum';
+import groupBy from 'lodash/groupBy';
+import head from 'lodash/head';
 import { Dictionary } from 'express-serve-static-core';
 import { constants } from '../constants';
+import { v4 as uuidv4 } from 'uuid';
 
 interface Options {
   label: string;
@@ -77,14 +88,6 @@ export default defineComponent({
       required: true,
     },
   },
-  components: {
-    QItem,
-    QItemLabel,
-    QItemSection,
-    QList,
-    QRadio,
-    QSelect,
-  },
   data() {
     return {
       chosenArticles: ref([] as Array<number>),
@@ -93,6 +96,21 @@ export default defineComponent({
       articlesGrouped: {} as Dictionary<Array<Article>>,
       constants,
     };
+  },
+  methods: {
+    submitOrder() {
+      const configuration = uuidv4();
+      this.$router.replace({
+        query: { configuration },
+      });
+      api.post('/order', {
+        articleNumbers: [
+          ...this.chosenArticles,
+          ...this.chosenArticles2.map((option) => option.value),
+        ],
+        link: configuration,
+      });
+    },
   },
   computed: {
     price() {
@@ -105,22 +123,46 @@ export default defineComponent({
           )?.articlePrice ?? 0
       );
 
-      return _.sum(prices);
+      return (sum(prices) / 100).toFixed(2);
     },
   },
   async mounted() {
-    api.get('/article').then((response) => {
-      this.articles = response.data;
-      this.articlesGrouped = _.groupBy(
-        this.articles,
-        (article: Article) => article.articleType
-      );
+    const response = await api.get('/article');
+    this.articles = response.data;
+    this.articlesGrouped = groupBy(
+      this.articles,
+      (article: Article) => article.articleType
+    );
 
-      // set the default choices
+    // sets the default choices
+    if (!this.$route.query.configuration) {
       Object.entries(this.articlesGrouped).forEach(([key, value]) => {
-        this.chosenArticles[Number.parseInt(key)] = value[0].articleNumber;
+        if (!this.constants.selectionCategories.includes(Number(key)))
+          this.chosenArticles[Number.parseInt(key)] =
+            head(value)?.articleNumber ?? 0;
       });
-    });
+    } else {
+      const response = await api.get(
+        '/order/link/' + this.$route.query.configuration
+      );
+      const articles: Array<Article> = response.data.articles;
+      articles.forEach((article, index) => {
+        if (!this.constants.selectionCategories.includes(article.articleType)) {
+          this.chosenArticles[index] = article.articleNumber;
+        } else {
+          this.chosenArticles2[index - article.articleType] = {
+            label: article.articleName,
+            value: article.articleNumber,
+          };
+        }
+      });
+    }
   },
 });
 </script>
+
+<style>
+.configurator {
+  min-width: 12rem;
+}
+</style>
