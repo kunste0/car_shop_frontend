@@ -8,9 +8,7 @@
       >
         <div v-if="constants.selectionCategories.includes(Number(type))">
           <q-select
-            class="q-my-sm"
             filled
-            :popup-content-style="{ width: '320px' }"
             v-model="chosenArticles2"
             multiple
             :options="
@@ -48,7 +46,7 @@
         </div>
       </q-expansion-item>
     </div>
-    <div class="q-my-md">
+    <div>
       <p class="text-positive text-weight-bold">
         {{ `${$t('configurator.price')}: ${price}` }}
       </p>
