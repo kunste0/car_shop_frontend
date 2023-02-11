@@ -50,7 +50,7 @@
     </div>
     <div class="q-my-md">
       <p class="text-positive text-weight-bold">
-        {{ `${$t('configurator.price')}: ${price} €` }}
+        {{ `${$t('configurator.price')}: ${price}` }}
       </p>
 
       <div class="row justify-center items-center">
@@ -74,11 +74,12 @@ import head from 'lodash/head';
 import { Dictionary } from 'express-serve-static-core';
 import { constants } from '../constants';
 import { v4 as uuidv4 } from 'uuid';
+import { Options } from './models';
 
-interface Options {
-  label: string;
-  value: number;
-}
+const formatter = new Intl.NumberFormat(navigator.language, {
+  style: 'currency',
+  currency: constants.currency,
+});
 
 export default defineComponent({
   name: 'CarConfigurator',
@@ -123,7 +124,7 @@ export default defineComponent({
           )?.articlePrice ?? 0
       );
 
-      return (sum(prices) / 100).toFixed(2);
+      return formatter.format(sum(prices));
     },
   },
   async mounted() {

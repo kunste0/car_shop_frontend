@@ -5,6 +5,11 @@ export interface Article {
   articleType: number;
 }
 
+export interface Options {
+  label: string;
+  value: number;
+}
+
 export enum ArticleCategory {
   POWER = 0,
   COLOR = 1,
