@@ -123,8 +123,9 @@ export default defineComponent({
             (article) => article.articleNumber === chosenArticleNumber
           )?.articlePrice ?? 0
       );
+      const priceSum = sum(prices) / 100;
 
-      return formatter.format(sum(prices));
+      return formatter.format(priceSum);
     },
   },
   async mounted() {
