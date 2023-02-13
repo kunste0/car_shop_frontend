@@ -5,7 +5,7 @@
 </template>
 
 <script lang="ts">
-import CarConfigurator from 'src/components/CarConfigurator.vue';
+import CarConfigurator from 'src/components/templates/CarConfigurator.vue';
 import { defineComponent } from 'vue';
 
 export default defineComponent({

@@ -5,7 +5,7 @@ export interface Article {
   articleType: number;
 }
 
-export interface Options {
+export interface SelectableOption {
   label: string;
   value: number;
 }

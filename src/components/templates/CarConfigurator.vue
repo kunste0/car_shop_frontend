@@ -7,26 +7,12 @@
         :label="$t('configurator.articleType' + type)"
       >
         <div v-if="constants.selectionCategories.includes(Number(type))">
-          <q-select
-            filled
-            v-model="chosenArticles2"
-            multiple
-            :options="
-              articles.map((article) => {
-                return {
-                  label: article.articleName,
-                  value: article.articleNumber,
-                };
-              })
-            "
-            :max-values="constants.miscArticlesMax"
-            counter
-            :hint="
-              $t('configurator.maxArticles', {
-                max: constants.miscArticlesMax,
-              })
-            "
-            style="max-width: 12rem"
+          <option-select
+            :articles="articles"
+            :preSelected="preSelectArticles(Number(type), articles.length)"
+            style="max-width: 14rem"
+            @add="addChosenArticle"
+            @remove="removeChosenArticle"
           />
         </div>
         <div v-else>
@@ -63,16 +49,17 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue';
-import { api } from '../boot/axios';
-import { Article } from './models';
+import { defineComponent } from 'vue';
+import { api } from 'boot/axios';
+import { Article, SelectableOption } from '../models';
 import sum from 'lodash/sum';
 import groupBy from 'lodash/groupBy';
 import head from 'lodash/head';
 import { Dictionary } from 'express-serve-static-core';
-import { constants } from '../constants';
+import { constants } from '../../constants';
 import { v4 as uuidv4 } from 'uuid';
-import { Options } from './models';
+
+import OptionSelect from '../organisms/OptionSelect.vue';
 
 const formatter = new Intl.NumberFormat(navigator.language, {
   style: 'currency',
@@ -81,6 +68,9 @@ const formatter = new Intl.NumberFormat(navigator.language, {
 
 export default defineComponent({
   name: 'CarConfigurator',
+  components: {
+    OptionSelect,
+  },
   props: {
     title: {
       type: String,
@@ -89,9 +79,8 @@ export default defineComponent({
   },
   data() {
     return {
-      chosenArticles: ref([] as Array<number>),
-      chosenArticles2: ref([] as Array<Options>),
       articles: [] as Array<Article>,
+      chosenArticles: [] as Array<number>, // holds article numbers of the chosen articles
       articlesGrouped: {} as Dictionary<Array<Article>>,
       constants,
     };
@@ -103,19 +92,25 @@ export default defineComponent({
         query: { configuration },
       });
       api.post('/order', {
-        articleNumbers: [
-          ...this.chosenArticles,
-          ...this.chosenArticles2.map((option) => option.value),
-        ],
+        articleNumbers: this.chosenArticles,
         link: configuration,
       });
+    },
+    preSelectArticles(start: number, end: number) {
+      return this.chosenArticles.slice(start, start + end);
+    },
+    addChosenArticle(item: { index: number; value: SelectableOption }) {
+      this.chosenArticles.push(item.value.value);
+    },
+    removeChosenArticle(item: { index: number; value: SelectableOption }) {
+      this.chosenArticles = this.chosenArticles.filter(
+        (articleNumber) => articleNumber !== item.value.value
+      );
     },
   },
   computed: {
     price() {
-      const articlesTemp = this.chosenArticles2.map((option) => option.value);
-      const articles = [...this.chosenArticles, ...articlesTemp];
-      const prices = articles.map(
+      const prices = this.chosenArticles.map(
         (chosenArticleNumber) =>
           this.articles.find(
             (article) => article.articleNumber === chosenArticleNumber
@@ -146,15 +141,8 @@ export default defineComponent({
         '/order/link/' + this.$route.query.configuration
       );
       const articles: Array<Article> = response.data.articles;
-      articles.forEach((article, index) => {
-        if (!this.constants.selectionCategories.includes(article.articleType)) {
-          this.chosenArticles[index] = article.articleNumber;
-        } else {
-          this.chosenArticles2[index - article.articleType] = {
-            label: article.articleName,
-            value: article.articleNumber,
-          };
-        }
+      articles.forEach((article) => {
+        this.chosenArticles.push(article.articleNumber);
       });
     }
   },
@@ -163,6 +151,6 @@ export default defineComponent({
 
 <style>
 .configurator {
-  min-width: 12rem;
+  min-width: 14rem;
 }
 </style>
