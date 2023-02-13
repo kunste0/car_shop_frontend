@@ -1,6 +1,6 @@
 <template>
   <div class="configurator">
-    <p class="text-weight-bold">{{ title }}</p>
+    <headline :text="title" />
     <div v-for="(articles, type) in articlesGrouped" :key="type">
       <q-expansion-item
         expand-separator
@@ -59,6 +59,7 @@ import { Dictionary } from 'express-serve-static-core';
 import { constants } from '../../constants';
 import { v4 as uuidv4 } from 'uuid';
 
+import Headline from '../atoms/Headline.vue';
 import OptionSelect from '../organisms/OptionSelect.vue';
 
 const formatter = new Intl.NumberFormat(navigator.language, {
@@ -70,6 +71,7 @@ export default defineComponent({
   name: 'CarConfigurator',
   components: {
     OptionSelect,
+    Headline,
   },
   props: {
     title: {
