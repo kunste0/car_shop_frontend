@@ -58,6 +58,7 @@ import head from 'lodash/head';
 import { Dictionary } from 'express-serve-static-core';
 import { constants } from '../../constants';
 import { v4 as uuidv4 } from 'uuid';
+import { useConfiguratorStore } from '../../stores/configurator-store';
 
 import Headline from '../atoms/Headline.vue';
 import OptionSelect from '../organisms/OptionSelect.vue';
@@ -66,6 +67,8 @@ const formatter = new Intl.NumberFormat(navigator.language, {
   style: 'currency',
   currency: constants.currency,
 });
+
+const store = useConfiguratorStore();
 
 export default defineComponent({
   name: 'CarConfigurator',
@@ -81,7 +84,6 @@ export default defineComponent({
   },
   data() {
     return {
-      articles: [] as Array<Article>,
       chosenArticles: [] as Array<number>, // holds article numbers of the chosen articles
       articlesGrouped: {} as Dictionary<Array<Article>>,
       constants,
@@ -122,10 +124,12 @@ export default defineComponent({
 
       return formatter.format(priceSum);
     },
+    articles() {
+      return store.articles;
+    },
   },
   async mounted() {
-    const response = await api.get('/article');
-    this.articles = response.data;
+    await store.fetchArticles();
     this.articlesGrouped = groupBy(
       this.articles,
       (article: Article) => article.articleType
@@ -139,11 +143,8 @@ export default defineComponent({
             head(value)?.articleNumber ?? 0;
       });
     } else {
-      const response = await api.get(
-        '/order/link/' + this.$route.query.configuration
-      );
-      const articles: Array<Article> = response.data.articles;
-      articles.forEach((article) => {
+      await store.fetchOrderArticles(this.$route.query.configuration);
+      store.getOrderArticles.forEach((article) => {
         this.chosenArticles.push(article.articleNumber);
       });
     }
